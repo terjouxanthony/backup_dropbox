@@ -1,0 +1,8 @@
+backup_dir: ~/test_folder/
+file_prefix_to_backup:
+  - prefix_1-
+  - prefix_2-
+date_format: "yyyy-MM-dd_HH_mm_ss"
+dropbox_client_identifier: "Name of your Dropbox app"
+dropbox_token: "Your generated Dropbox Token"
+number_of_days_to_keep: 3

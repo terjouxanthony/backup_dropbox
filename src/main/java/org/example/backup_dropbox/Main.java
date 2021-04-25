@@ -28,14 +28,23 @@ import java.util.stream.Stream;
 @Slf4j
 public class Main {
 
-    public static void main(String[] args) throws IOException, DbxException {
-        final long startNanos = System.nanoTime();
+    public static void main(String[] args) {
+        try {
+            if (args.length != 1) {
+                log.error("Config file path argument must be provided");
+                System.exit(1);
+            }
+            var configFilePath = args[0];
 
-        if (args.length != 1) {
-            log.error("Config file path argument must be provided");
+            dropboxBackup(configFilePath);
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
             System.exit(1);
         }
-        var configFilePath = args[0];
+    }
+
+    static void dropboxBackup(String configFilePath) throws IOException, DbxException {
+        final long startNanos = System.nanoTime();
         var mapper = new ObjectMapper(new YAMLFactory());
         final Config config = mapper.readValue(new File(configFilePath), Config.class);
         var dateFormatter = DateTimeFormatter.ofPattern(config.dateFormat());
@@ -92,29 +101,29 @@ public class Main {
         log.info("Synchronization with Dropbox took {} ms", Duration.ofNanos(endNanos - startNanos).toMillis());
     }
 
-    private static LocalDateTime parseDate(String file,
-                                           String prefixLower,
-                                           DateTimeFormatter dateFormatter,
-                                           Config config) {
+    static LocalDateTime parseDate(String file,
+                                   String prefixLower,
+                                   DateTimeFormatter dateFormatter,
+                                   Config config) {
         final String dateStr = file.substring(prefixLower.length(), prefixLower.length() + config.dateFormat().length());
         try {
             return LocalDateTime.parse(dateStr, dateFormatter);
         } catch (DateTimeParseException ex) {
-            throw new RuntimeException("The parameter date_format in your config is invalid", ex);
+            throw new RuntimeException("Impossible to parse date %s for file %s".formatted(dateStr, file), ex);
         }
     }
 
-    private static List<Path> listLocalFiles(String path) throws IOException {
+    static List<Path> listLocalFiles(String path) throws IOException {
         try (var files = Files.list(Paths.get(path))) {
             return files.toList();
         }
     }
 
-    private static FileMetadata uploadDropboxFile(DbxClientV2 client, String path, InputStream in) throws DbxException, IOException {
+    static FileMetadata uploadDropboxFile(DbxClientV2 client, String path, InputStream in) throws DbxException, IOException {
         return client.files().uploadBuilder(path).uploadAndFinish(in);
     }
 
-    private static void deleteDropboxFile(DbxClientV2 client, String path) throws DbxException {
+    static void deleteDropboxFile(DbxClientV2 client, String path) throws DbxException {
         client.files().deleteV2(path);
     }
 

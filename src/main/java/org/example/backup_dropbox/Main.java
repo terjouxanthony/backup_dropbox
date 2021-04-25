@@ -31,8 +31,13 @@ public class Main {
     public static void main(String[] args) throws IOException, DbxException {
         final long startNanos = System.nanoTime();
 
+        if (args.length != 1) {
+            log.error("Config file path argument must be provided");
+            System.exit(1);
+        }
+        var configFilePath = args[0];
         var mapper = new ObjectMapper(new YAMLFactory());
-        final Config config = mapper.readValue(new File("./config.yaml"), Config.class);
+        final Config config = mapper.readValue(new File(configFilePath), Config.class);
         var dateFormatter = DateTimeFormatter.ofPattern(config.dateFormat());
 
         // Create Dropbox client
